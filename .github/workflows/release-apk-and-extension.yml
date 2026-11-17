@@ -17,45 +17,26 @@ jobs:
       - name: Repository auschecken
         uses: actions/checkout@v4
 
-      - name: JDK 17 einrichten
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Android SDK einrichten
-        uses: android-actions/setup-android@v3
-
-      - name: Gradle 8.9 einrichten
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.9"
-
-      - name: Android APK kompilieren
-        id: apk
-        continue-on-error: true
-        run: |
-          mkdir -p dist
-          if gradle -p android-app assembleDebug; then
-            cp android-app/app/build/outputs/apk/debug/app-debug.apk "dist/DroidBridge-Pro-v2.4.0-pro.apk"
-            echo "apk_built=true" >> $GITHUB_OUTPUT
-          else
-            echo "apk_built=false" >> $GITHUB_OUTPUT
-            echo "APK build failed (project may be incomplete) – Extension will still be released."
-          fi
-
       - name: Chrome Extension (Manifest V3) packen
         run: |
           mkdir -p dist
           (cd chrome-extension && zip -r "../dist/DroidBridge-Pro-Chrome-Extension-MV3.zip" .)
+          ls -la dist/
 
       - name: GitHub Release mit Download-Links veröffentlichen
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v2.4.0-pro
           name: DroidBridge Pro v2.4.0-pro
+          body: |
+            ## DroidBridge Pro v2.4.0-pro
+
+            - Chrome Extension (Manifest V3) bereit zum Download
+            - Android APK folgt, sobald das Gradle-Projekt vollständig ist
+
+            ### Download
+            - **Chrome Extension:** [DroidBridge-Pro-Chrome-Extension-MV3.zip](https://github.com/b3taisadonna/-droidbridge-pro/releases/download/v2.4.0-pro/DroidBridge-Pro-Chrome-Extension-MV3.zip)
           generate_release_notes: true
           files: |
-            dist/DroidBridge-Pro-v2.4.0-pro.apk
             dist/DroidBridge-Pro-Chrome-Extension-MV3.zip
           fail_on_unmatched_files: false
