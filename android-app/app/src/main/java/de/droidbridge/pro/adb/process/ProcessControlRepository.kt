@@ -1,19 +1,37 @@
 package de.droidbridge.pro.adb.process
 
-/**
- * Process control helpers for ADB / Shizuku based process management.
- */
-class ProcessControlRepository {
-    fun listRunningProcesses(): List<String> {
-        // Placeholder – real implementation uses Shizuku / ADB shell "ps"
-        return emptyList()
+import de.droidbridge.pro.adb.bridge.AdbExecutionResult
+import de.droidbridge.pro.adb.bridge.AdbMaintenanceEngine
+
+class ProcessControlRepository(private val engine: AdbMaintenanceEngine) {
+
+    private val restrictedPackages = listOf(
+        "de.telekom.android.customercenter",
+        "com.facebook.services"
+    )
+
+    suspend fun forceStopPackage(packageName: String): AdbExecutionResult {
+        return engine.executeShell("am force-stop $packageName")
     }
 
-    fun killProcess(pid: Int): Boolean {
-        return false
+    suspend fun setStandbyBucket(packageName: String, bucket: String): AdbExecutionResult {
+        return engine.executeShell("am set-standby-bucket $packageName $bucket")
     }
 
-    fun setBackgroundLimit(limit: Int) {
-        // adb shell settings put global activity_manager_constants max_cached_processes=$limit
+    suspend fun blockBackgroundWakeups(packageName: String): List<AdbExecutionResult> {
+        return listOf(
+            engine.executeShell("cmd appops set $packageName RUN_IN_BACKGROUND ignore"),
+            engine.executeShell("cmd appops set $packageName RUN_ANY_IN_BACKGROUND ignore"),
+            engine.executeShell("cmd appops set $packageName WAKE_LOCK ignore")
+        )
+    }
+
+    suspend fun enforceRestrictedPolicy(): List<AdbExecutionResult> {
+        return restrictedPackages.flatMap { pkg ->
+            listOf(
+                forceStopPackage(pkg),
+                setStandbyBucket(pkg, "restricted")
+            )
+        }
     }
 }
