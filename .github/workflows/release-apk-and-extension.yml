@@ -1,0 +1,1 @@
+adb devices -l && adb shell getprop ro.product.model
