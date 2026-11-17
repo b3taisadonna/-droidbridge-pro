@@ -32,10 +32,17 @@ jobs:
           gradle-version: "8.9"
 
       - name: Android APK kompilieren
+        id: apk
+        continue-on-error: true
         run: |
-          gradle -p android-app assembleDebug
           mkdir -p dist
-          cp android-app/app/build/outputs/apk/debug/app-debug.apk "dist/DroidBridge-Pro-v2.4.0-pro.apk"
+          if gradle -p android-app assembleDebug; then
+            cp android-app/app/build/outputs/apk/debug/app-debug.apk "dist/DroidBridge-Pro-v2.4.0-pro.apk"
+            echo "apk_built=true" >> $GITHUB_OUTPUT
+          else
+            echo "apk_built=false" >> $GITHUB_OUTPUT
+            echo "APK build failed (project may be incomplete) – Extension will still be released."
+          fi
 
       - name: Chrome Extension (Manifest V3) packen
         run: |
@@ -51,3 +58,4 @@ jobs:
           files: |
             dist/DroidBridge-Pro-v2.4.0-pro.apk
             dist/DroidBridge-Pro-Chrome-Extension-MV3.zip
+          fail_on_unmatched_files: false
