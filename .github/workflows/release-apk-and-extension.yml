@@ -1,1 +1,53 @@
-adb devices -l && adb shell getprop ro.product.model
+name: Build APK & Chrome Extension Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: JDK 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android SDK einrichten
+        uses: android-actions/setup-android@v3
+
+      - name: Gradle 8.9 einrichten
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Android APK kompilieren
+        run: |
+          gradle -p android-app assembleDebug
+          mkdir -p dist
+          cp android-app/app/build/outputs/apk/debug/app-debug.apk "dist/DroidBridge-Pro-v2.4.0-pro.apk"
+
+      - name: Chrome Extension (Manifest V3) packen
+        run: |
+          mkdir -p dist
+          (cd chrome-extension && zip -r "../dist/DroidBridge-Pro-Chrome-Extension-MV3.zip" .)
+
+      - name: GitHub Release mit Download-Links veröffentlichen
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.4.0-pro
+          name: DroidBridge Pro v2.4.0-pro
+          generate_release_notes: true
+          files: |
+            dist/DroidBridge-Pro-v2.4.0-pro.apk
+            dist/DroidBridge-Pro-Chrome-Extension-MV3.zip
