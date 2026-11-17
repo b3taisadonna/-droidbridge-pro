@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "DroidBridge Pro — ADB Companion",
+  "version": "2.4.0",
+  "description": "WebUSB-ADB-Verbindung, WLAN-ADB-Konfiguration, RTT-Ping, Speicherbereinigung und Schnell-Skripte direkt in Chrome.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DroidBridge Pro öffnen"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html"
+}
